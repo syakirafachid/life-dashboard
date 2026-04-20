@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Life Dashboard</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green: #00ff88;
+      --green-dim: #00cc66;
+      --green-dark: #006633;
+      --green-deep: #003320;
+      --bg: #070a07;
+      --bg2: #0a0f0a;
+      --bg3: #0d140d;
+      --border: #1a2e1a;
+      --border-hover: #2a4a2a;
+      --text: #c8dcc8;
+      --text-dim: #557755;
+      --text-muted: #2a4a2a;
+    }
+
+    html, body { min-height: 100vh; background: var(--bg); }
+
+    body {
+      font-family: 'Share Tech Mono', monospace;
+      color: var(--text);
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0,255,136,0.06), transparent),
+        linear-gradient(rgba(0,255,136,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,136,0.015) 1px, transparent 1px);
+      background-size: 100% 100%, 40px 40px, 40px 40px;
+    }
+
+    .scanline {
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px
+      );
+      z-index: 999;
+    }
+
+    .dash {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px 20px 40px;
+    }
+
+    /* HEADER */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      font-family: 'Orbitron', monospace;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--green);
+      letter-spacing: 3px;
+    }
+
+    .logo-sub {
+      font-size: 9px;
+      color: var(--text-muted);
+      letter-spacing: 4px;
+      margin-top: 6px;
+    }
+
+    .sys-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 9px;
+      color: var(--text-muted);
+      letter-spacing: 2px;
+      margin-top: 8px;
+    }
+
+    .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: blink 2s infinite;
+    }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    .clock-block { text-align: right; }
+
+    #clock {
+      font-family: 'Orbitron', monospace;
+      font-size: 30px;
+      font-weight: 700;
+      color: var(--green);
+      letter-spacing: 4px;
+      text-shadow: 0 0 20px rgba(0,255,136,0.4);
+      line-height: 1;
+    }
+
+    #datestr {
+      font-size: 10px;
+      color: var(--text-dim);
+      margin-top: 6px;
+      letter-spacing: 3px;
+    }
+
+    /* QUOTE */
+    .quote-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--green);
+      border-radius: 6px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      animation: fadeIn 0.6s ease;
+    }
+
+    @keyframes fadeIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
+
+    .quote-inner { flex: 1; }
+
+    #quote-text {
+      font-size: 12px;
+      color: #88bb99;
+      line-height: 1.9;
+      font-style: italic;
+    }
+
+    #quote-author {
+      font-size: 9px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      letter-spacing: 2px;
+    }
+
+    .refresh-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 6px 10px;
+      color: var(--text-dim);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      cursor: pointer;
+      letter-spacing: 2px;
+      white-space: nowrap;
+      transition: border-color .2s, color .2s;
+    }
+
+    .refresh-btn:hover { border-color: var(--green); color: var(--green); }
+
+    /* STATS */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stat-box {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+      transition: border-color .2s;
+    }
+
+    .stat-box:hover { border-color: var(--border-hover); }
+
+    .stat-val {
+      font-family: 'Orbitron', monospace;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--green);
+      letter-spacing: 2px;
+    }
+
+    .stat-label {
+      font-size: 8px;
+      color: var(--text-muted);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-top: 5px;
+    }
+
+    /* GRID */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      transition: border-color .2s;
+    }
+
+    .card:hover { border-color: var(--border-hover); }
+
+    .card-title {
+      font-size: 9px;
+      letter-spacing: 4px;
+      color: var(--green);
+      margin-bottom: 14px;
+      text-transform: uppercase;
+    }
+
+    /* TODO */
+    .todo-input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .todo-input-row input {
+      flex: 1;
+      background: #050708;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 8px 10px;
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .todo-input-row input:focus { border-color: var(--green); }
+    .todo-input-row input::placeholder { color: var(--text-muted); }
+
+    .add-btn {
+      background: var(--green);
+      border: none;
+      border-radius: 4px;
+      padding: 8px 12px;
+      color: #000;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: background .2s, transform .1s;
+    }
+
+    .add-btn:hover { background: #00ffaa; }
+    .add-btn:active { transform: scale(0.97); }
+
+    .todo-list {
+      max-height: 170px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .todo-list::-webkit-scrollbar { width: 3px; }
+    .todo-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .todo-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid #0f180f;
+      font-size: 11px;
+      animation: slideIn 0.2s ease;
+    }
+
+    @keyframes slideIn { from{opacity:0;transform:translateX(-6px)} to{opacity:1;transform:translateX(0)} }
+
+    .todo-item:last-child { border-bottom: none; }
+
+    .todo-check {
+      width: 14px; height: 14px;
+      border: 1px solid var(--border-hover);
+      border-radius: 2px;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #050708;
+      font-size: 9px;
+      transition: background .15s, border-color .15s;
+    }
+
+    .todo-check.done { background: var(--green); border-color: var(--green); color: #000; }
+
+    .todo-text { flex: 1; color: var(--text); transition: color .2s; }
+    .todo-text.done { text-decoration: line-through; color: var(--text-muted); }
+
+    .todo-del {
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 0 2px;
+      transition: color .15s;
+      line-height: 1;
+    }
+
+    .todo-del:hover { color: #ff4455; }
+
+    /* HABITS */
+    .habit-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .habit-item {
+      background: #050708;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+      user-select: none;
+    }
+
+    .habit-item:hover { border-color: var(--border-hover); }
+    .habit-item.active { border-color: var(--green); background: #020f06; }
+
+    .habit-icon { font-size: 16px; margin-bottom: 4px; }
+    .habit-name { font-size: 9px; letter-spacing: 2px; color: var(--text-dim); text-transform: uppercase; }
+    .habit-status { font-size: 9px; margin-top: 3px; color: var(--text-muted); letter-spacing: 1px; }
+    .habit-item.active .habit-status { color: var(--green); }
+    .habit-item.active .habit-name { color: var(--green-dim); }
+
+    /* PROGRESS */
+    .progress-wrap { margin-top: 12px; }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 9px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      letter-spacing: 2px;
+    }
+
+    .progress-bar {
+      background: #0a120a;
+      border-radius: 2px;
+      height: 3px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--green-dark), var(--green));
+      border-radius: 2px;
+      transition: width 0.5s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* FOOTER */
+    .footer {
+      margin-top: 20px;
+      font-size: 8px;
+      color: var(--text-muted);
+      text-align: center;
+      letter-spacing: 4px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 600px) {
+      .grid { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: repeat(3, 1fr); }
+      #clock { font-size: 20px; }
+      .logo { font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="scanline"></div>
+
+  <div class="dash">
+    <!-- HEADER -->
+    <div class="header">
+      <div>
+        <div class="logo">LIFE.DASHBOARD</div>
+        <div class="logo-sub">PERSONAL DATA TERMINAL</div>
+        <div class="sys-status">
+          <span class="dot"></span>
+          <span>SYSTEM ONLINE &nbsp;/&nbsp; v1.0.0</span>
+        </div>
+      </div>
+      <div class="clock-block">
+        <div id="clock">00:00:00</div>
+        <div id="datestr">loading...</div>
+      </div>
+    </div>
+
+    <!-- QUOTE -->
+    <div class="quote-card">
+      <div class="quote-inner">
+        <div id="quote-text">Loading quote...</div>
+        <div id="quote-author"></div>
+      </div>
+      <button class="refresh-btn" onclick="newQuote()">[ new quote ]</button>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-val" id="tasks-done">0</div>
+        <div class="stat-label">Tasks Done</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="habits-done">0</div>
+        <div class="stat-label">Habits Done</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="streak-val">0</div>
+        <div class="stat-label">Day Streak</div>
+      </div>
+    </div>
+
+    <!-- MAIN GRID -->
+    <div class="grid">
+
+      <!-- TO-DO -->
+      <div class="card">
+        <div class="card-title">// Task Queue</div>
+        <div class="todo-input-row">
+          <input type="text" id="todo-input" placeholder="add new task..." maxlength="45"
+            onkeydown="if(event.key==='Enter') addTodo()" />
+          <button class="add-btn" onclick="addTodo()">+ ADD</button>
+        </div>
+        <div class="todo-list" id="todo-list"></div>
+        <div class="progress-wrap">
+          <div class="progress-label">
+            <span>TASK PROGRESS</span>
+            <span id="task-pct-label">0%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="task-progress" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HABITS -->
+      <div class="card">
+        <div class="card-title">// Habit Tracker</div>
+        <div class="habit-grid" id="habit-grid"></div>
+        <div class="progress-wrap">
+          <div class="progress-label">
+            <span>DAILY COMPLETION</span>
+            <span id="habit-pct-label">0%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="habit-progress" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="footer">[ BUILT WITH HTML + CSS + JAVASCRIPT ] &nbsp;&mdash;&nbsp; YOUR LIFE IN DATA</div>
+  </div>
+
+  <script>
+    // ── QUOTES ──────────────────────────────────────────────────────────
+    const quotes = [
+      { text: "The secret of getting ahead is getting started.", author: "— Mark Twain" },
+      { text: "Do something today that your future self will thank you for.", author: "— Unknown" },
+      { text: "Small steps every day lead to big changes over time.", author: "— Unknown" },
+      { text: "You don't have to be great to start, but you have to start to be great.", author: "— Zig Ziglar" },
+      { text: "Focus on progress, not perfection.", author: "— Unknown" },
+      { text: "Discipline is choosing between what you want now and what you want most.", author: "— Abraham Lincoln" },
+      { text: "The best time to plant a tree was 20 years ago. The second best time is now.", author: "— Chinese Proverb" },
+      { text: "Consistency is more important than perfection.", author: "— Unknown" },
+      { text: "You are the architect of your own life.", author: "— Unknown" },
+      { text: "Done is better than perfect.", author: "— Sheryl Sandberg" },
+      { text: "Wake up with determination. Go to bed with satisfaction.", author: "— Unknown" },
+      { text: "Your only limit is your mind.", author: "— Unknown" }
+    ];
+
+    let quoteIdx = Math.floor(Math.random() * quotes.length);
+
+    function newQuote() {
+      quoteIdx = (quoteIdx + 1) % quotes.length;
+      document.getElementById('quote-text').textContent = quotes[quoteIdx].text;
+      document.getElementById('quote-author').textContent = quotes[quoteIdx].author;
+    }
+
+    // ── CLOCK ───────────────────────────────────────────────────────────
+    function updateClock() {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      const s = String(now.getSeconds()).padStart(2, '0');
+      document.getElementById('clock').textContent = `${h}:${m}:${s}`;
+
+      const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+      const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+      document.getElementById('datestr').textContent =
+        `${days[now.getDay()]}  ${String(now.getDate()).padStart(2,'0')} ${months[now.getMonth()]} ${now.getFullYear()}`;
+    }
+
+    // ── TO-DO ───────────────────────────────────────────────────────────
+    let todos = [
+      { text: 'Push this dashboard to GitHub', done: false },
+      { text: 'Customize the habits list', done: false },
+      { text: 'Add your own daily tasks', done: false }
+    ];
+
+    function renderTodos() {
+      const list = document.getElementById('todo-list');
+      list.innerHTML = '';
+
+      todos.forEach((t, i) => {
+        const item = document.createElement('div');
+        item.className = 'todo-item';
+        item.innerHTML = `
+          <div class="todo-check ${t.done ? 'done' : ''}" onclick="toggleTodo(${i})">${t.done ? '✓' : ''}</div>
+          <div class="todo-text ${t.done ? 'done' : ''}">${escHtml(t.text)}</div>
+          <div class="todo-del" onclick="deleteTodo(${i})" title="remove">×</div>
+        `;
+        list.appendChild(item);
+      });
+
+      const done = todos.filter(t => t.done).length;
+      const pct = todos.length ? Math.round((done / todos.length) * 100) : 0;
+      document.getElementById('tasks-done').textContent = done;
+      document.getElementById('task-progress').style.width = pct + '%';
+      document.getElementById('task-pct-label').textContent = pct + '%';
+      updateStats();
+    }
+
+    function addTodo() {
+      const inp = document.getElementById('todo-input');
+      const val = inp.value.trim();
+      if (!val) return;
+      todos.push({ text: val, done: false });
+      inp.value = '';
+      renderTodos();
+    }
+
+    function toggleTodo(i) { todos[i].done = !todos[i].done; renderTodos(); }
+    function deleteTodo(i) { todos.splice(i, 1); renderTodos(); }
+
+    function escHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    // ── HABITS ──────────────────────────────────────────────────────────
+    const habits = [
+      { icon: '💧', name: 'Drink Water', done: false },
+      { icon: '🏋️', name: 'Workout',    done: false },
+      { icon: '📖', name: 'Read',        done: false },
+      { icon: '🧘', name: 'Meditate',    done: false },
+      { icon: '🌙', name: 'Sleep 8hr',   done: false },
+      { icon: '🥗', name: 'Eat Clean',   done: false }
+    ];
+
+    function renderHabits() {
+      const grid = document.getElementById('habit-grid');
+      grid.innerHTML = '';
+
+      habits.forEach((h, i) => {
+        const el = document.createElement('div');
+        el.className = 'habit-item' + (h.done ? ' active' : '');
+        el.innerHTML = `
+          <div class="habit-icon">${h.icon}</div>
+          <div class="habit-name">${h.name}</div>
+          <div class="habit-status">${h.done ? '[ DONE ]' : '[ pending ]'}</div>
+        `;
+        el.onclick = () => { habits[i].done = !habits[i].done; renderHabits(); updateStats(); };
+        grid.appendChild(el);
+      });
+
+      const done = habits.filter(h => h.done).length;
+      const pct = Math.round((done / habits.length) * 100);
+      document.getElementById('habits-done').textContent = done;
+      document.getElementById('habit-progress').style.width = pct + '%';
+      document.getElementById('habit-pct-label').textContent = pct + '%';
+    }
+
+    // ── STATS ───────────────────────────────────────────────────────────
+    function updateStats() {
+      const allHabitsDone = habits.every(h => h.done);
+      document.getElementById('streak-val').textContent = allHabitsDone ? '🔥 1' : '0';
+    }
+
+    // ── INIT ────────────────────────────────────────────────────────────
+    newQuote();
+    renderTodos();
+    renderHabits();
+    updateClock();
+    setInterval(updateClock, 1000);
+  </script>
+</body>
+</html>
