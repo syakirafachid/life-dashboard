@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Life Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="scanline"></div>
+  <div class="dash">
+
+    <div class="header">
+      <div>
+        <div class="logo">LIFE.DASHBOARD</div>
+        <div class="logo-sub">PERSONAL DATA TERMINAL</div>
+        <div class="sys-status">
+          <span class="dot"></span>
+          <span id="db-status">CONNECTING...</span>
+        </div>
+      </div>
+      <div class="clock-block">
+        <div id="clock">00:00:00</div>
+        <div id="datestr">loading...</div>
+      </div>
+    </div>
+
+    <div class="quote-card">
+      <div class="quote-inner">
+        <div id="quote-text">Loading quote...</div>
+        <div id="quote-author"></div>
+      </div>
+      <button class="refresh-btn" onclick="newQuote()">[ new quote ]</button>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-val" id="tasks-done">0</div>
+        <div class="stat-label">Tasks Done</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="habits-done">0</div>
+        <div class="stat-label">Habits Done</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="streak-val">0</div>
+        <div class="stat-label">Day Streak</div>
+      </div>
+    </div>
+
+    <div class="grid">
+
+      <div class="card">
+        <div class="card-title">
+          // Task Queue
+          <button class="clear-btn" onclick="clearDoneTodos()">[ clear done ]</button>
+        </div>
+        <div class="todo-input-row">
+          <input type="text" id="todo-input" placeholder="add new task..." maxlength="45"
+                 onkeydown="if(event.key==='Enter') addTodo()" />
+          <button class="add-btn" onclick="addTodo()">+ ADD</button>
+        </div>
+        <div class="todo-list" id="todo-list">
+          <div class="empty-state">[ LOADING... ]</div>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-label">
+            <span>TASK PROGRESS</span>
+            <span id="task-pct-label">0%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="task-progress" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">// Habit Tracker</div>
+        <div class="habit-grid" id="habit-grid">
+          <div class="empty-state" style="grid-column:1/-1">[ LOADING... ]</div>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-label">
+            <span>DAILY COMPLETION</span>
+            <span id="habit-pct-label">0%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="habit-progress" style="width:0%"></div>
+          </div>
+        </div>
+        <div class="streak-bar">
+          CURRENT STREAK
+          <div class="streak-val" id="streak-display">0 days</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="footer">[ LIFE.DASHBOARD v2.0 ] &mdash; POWERED BY SUPABASE + VERCEL</div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
